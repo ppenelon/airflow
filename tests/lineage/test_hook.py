@@ -43,18 +43,18 @@ class TestHookLineageCollector:
             [(Dataset("postgres://example.com:5432/database/default/table"), output_hook)],
         )
 
-    @patch("airflow.lineage.hook.create_dataset")
-    def test_add_input_dataset(self, mock_create_dataset):
+    @patch("airflow.lineage.hook.Dataset")
+    def test_add_input_dataset(self, mock_dataset):
         collector = HookLineageCollector()
-        mock_dataset = MagicMock(spec=Dataset)
-        mock_create_dataset.return_value = mock_dataset
+        dataset = MagicMock(spec=Dataset)
+        mock_dataset.return_value = dataset
 
         dataset_kwargs = {"uri": "test_uri"}
         hook = MagicMock()
         collector.add_input_dataset(dataset_kwargs, hook)
 
-        assert collector.inputs == [(mock_dataset, hook)]
-        mock_create_dataset.assert_called_once_with("test_uri")
+        assert collector.inputs == [(dataset, hook)]
+        mock_dataset.assert_called_once_with(uri="test_uri")
 
     @patch("airflow.lineage.hook.ProvidersManager")
     def test_create_dataset(self, mock_providers_manager):

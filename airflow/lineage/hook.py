@@ -21,7 +21,7 @@ from typing import Union
 
 import attr
 
-from airflow.datasets import Dataset, create_dataset
+from airflow.datasets import Dataset
 from airflow.hooks.base import BaseHook
 from airflow.io.store import ObjectStore
 from airflow.providers_manager import ProvidersManager
@@ -58,7 +58,7 @@ class HookLineageCollector(LoggingMixin):
         """Create a Dataset instance from the given dataset kwargs."""
         if "uri" in dataset_kwargs:
             # Fallback to default factory using the provided URI
-            return create_dataset(dataset_kwargs["uri"])
+            return Dataset(uri=dataset_kwargs["uri"])
 
         scheme: str = dataset_kwargs.pop("scheme", None)
         if not scheme:
@@ -112,7 +112,9 @@ class NoOpCollector(HookLineageCollector):
     def collected_datasets(
         self,
     ) -> HookLineage:
-        self.log.warning("You should not call this as there's no reader.")
+        self.log.warning(
+            "Data lineage tracking might be incomplete. Consider registering a hook lineage reader for more detailed information."
+        )
         return HookLineage([], [])
 
 
@@ -132,7 +134,6 @@ def get_hook_lineage_collector() -> HookLineageCollector:
     """Get singleton lineage collector."""
     global _hook_lineage_collector
     if not _hook_lineage_collector:
-        # is there a better why how to use noop?
         if ProvidersManager().hook_lineage_readers:
             _hook_lineage_collector = HookLineageCollector()
         else:
